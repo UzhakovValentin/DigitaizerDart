@@ -328,3 +328,7 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+*.db
+
+DigitaizerDart/DigitaizerDart\.WebApp/appsettings\.Secret\.json
