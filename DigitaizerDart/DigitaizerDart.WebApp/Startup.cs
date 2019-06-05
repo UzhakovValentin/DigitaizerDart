@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DigitaizerDart.WebApp.Services;
+using DigitaizerDart.WebApp.Services.Classes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -28,7 +30,7 @@ namespace DigitaizerDart.WebApp
             options.UseSqlite(Configuration.GetConnectionString("SqliteDB"),
             mig => mig.MigrationsAssembly("DigitaizerDart.WebApp")));
 
-
+            services.AddSingleton<IIdFactory, IdFactory>();
             services.AddMvc();
         }
 
@@ -39,20 +41,12 @@ namespace DigitaizerDart.WebApp
             {
                 app.UseDeveloperExceptionPage();
             }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
+
 
             app.UseStaticFiles();
-          
 
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
+
+            app.UseMvc();
         }
     }
 }

@@ -9,8 +9,8 @@ namespace DigitaizerDart.WebApp.Models
     {
         public Guid FileId { get; set; }
         public string FileName { get; set; }
+        public byte[] MarkArray { get; set; }
         public string Path { get; set; }
-        public string JsonPath { get; set; }
-        public List<VersionJson> Versions { get; set; }
+        public List<Version> Versions { get; set; }
     }
 }

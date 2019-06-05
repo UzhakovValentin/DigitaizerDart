@@ -13,8 +13,8 @@ namespace DigitaizerDart.WebApp
         {
         }
 
-        DbSet<User> Users { get; set; }
-        DbSet<File> Files { get; set; }
-        DbSet<VersionJson> Versions { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<File> Files { get; set; }
+        public DbSet<Models.Version> Versions { get; set; }
     }
 }

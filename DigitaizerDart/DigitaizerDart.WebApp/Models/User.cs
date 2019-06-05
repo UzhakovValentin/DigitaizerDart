@@ -9,6 +9,7 @@ namespace DigitaizerDart.WebApp.Models
     {
         public Guid UserId { get; set; }
         public string Name { get; set; }
-        public List<VersionJson> Versions { get; set; }
+        public string LoginId { get; set; }
+        public List<Version> Versions { get; set; }
     }
 }

@@ -332,3 +332,5 @@ ASALocalRun/
 *.db
 
 DigitaizerDart/DigitaizerDart\.WebApp/appsettings\.Secret\.json
+
+DigitaizerDart/DigitaizerDart\.WebApp/Migrations/
