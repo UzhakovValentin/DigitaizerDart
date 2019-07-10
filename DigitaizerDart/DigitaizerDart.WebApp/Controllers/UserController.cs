@@ -25,6 +25,8 @@ namespace DigitaizerDart.WebApp.Controllers
         [HttpPost("registr")]
         public async Task<IActionResult> AddUser([FromBody] RegistrationForm form)
         {
+            
+
             User user = new User()
             {
                 Name = form.Name,
@@ -40,6 +42,8 @@ namespace DigitaizerDart.WebApp.Controllers
         [HttpPost("auth")]
         public IActionResult Auth([FromBody] AuthForm form)
         {
+
+            
             var user = dbContext.Users.FirstOrDefault(x => x.LoginId == form.Login);
 
             if (user != null)
