@@ -216,10 +216,6 @@ namespace DigitaizerDart.WebApp.Controllers
             obj[request.Frame]["people"][request.PeopleIndex]["pose_keypoints_2d"][request.PointsIndex] = request.X;
             obj[request.Frame]["people"][request.PeopleIndex]["pose_keypoints_2d"][request.PointsIndex + 1] = request.Y;
             return obj;
-
-            //JObject kadr = (JObject)obj[request.Frame];
-            //JArray people = (JArray)kadr["people"];
-            //JObject points = (JObject)people[request.PeopleIndex];
         }
 
         private byte[] Serialize2Bytes(object data)
