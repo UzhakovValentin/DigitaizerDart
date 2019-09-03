@@ -16,6 +16,5 @@ namespace DigitaizerDart.WebApp.ModelViews
         public float X { get; set; }
 
         public float Y { get; set; }
-
     }
 }

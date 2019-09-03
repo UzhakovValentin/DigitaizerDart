@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 
 using Version = DigitaizerDart.WebApp.Models.Version;
 using File = DigitaizerDart.WebApp.Models.File;
+
 using Microsoft.Extensions.Primitives;
 using Microsoft.Extensions.FileProviders;
 using System.Text;
@@ -26,46 +27,54 @@ namespace DigitaizerDart.WebApp.Controllers
         private readonly IHostingEnvironment env;
         private readonly DataBaseContext dbContext;
 
-        public FileController(IHostingEnvironment env, DataBaseContext dbContext)
+        public FileController(IHostingEnvironment env,
+            DataBaseContext dbContext)
         {
             this.env = env;
             this.dbContext = dbContext;
         }
 
-        //[HttpPost("upload")]
-        //public async Task<IActionResult> UploadFile()
-        //{
-        //    var file = Request.Form.Files;
 
 
+        [HttpPost("upload/{folderName}/{fileName}")]
+        public async Task<IActionResult> PostDataToJson(string folderName, string fileName)
+        {
+            if (!Directory.Exists(Path.Combine(env.WebRootPath, folderName)))
+            {
+                Directory.CreateDirectory(Path.Combine(env.WebRootPath, folderName));
+            }
 
-        //    if (file == null)
-        //    {
-        //        return BadRequest();
-        //    }
+            using (var stream = new FileStream(Path.Combine(env.WebRootPath, $"{folderName}/{fileName}.json"), FileMode.CreateNew))
+            {
+                await Request.Body.CopyToAsync(stream);
+            }
+            return Ok();
+        }
 
-        //    if (!Directory.Exists(Path.Combine(env.WebRootPath, Path.GetFileNameWithoutExtension(file.FileName))))
-        //    {
-        //        Directory.CreateDirectory(Path.Combine(env.WebRootPath, Path.GetFileNameWithoutExtension(file.FileName)));
-        //    }
+        [HttpPost("video/upload/{folderName}")]
+        public async Task<IActionResult> PostVideo(string folderName)
+        {
+            var files = Request.Form.Files;
 
-        //    using (var fileStream = new FileStream(Path.Combine(env.WebRootPath, Path.GetFileNameWithoutExtension(file.FileName), file.FileName), FileMode.Create))
-        //    {
-        //        await file.CopyToAsync(fileStream);
-        //    }
+            foreach (var file in files)
+            {
+                using (var fileStream = new FileStream(Path.Combine(env.WebRootPath, folderName, file.FileName), FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
 
-        //    File video = new File
-        //    {
-        //        FileName = file.FileName,
-        //        MarkArray = bytes,
-        //        Path = Path.Combine(env.WebRootPath, Path.GetFileNameWithoutExtension(file.FileName), file.FileName)
-        //    };
+                File video = new File
+                {
+                    FileName = file.FileName,
+                    Path = Path.Combine(env.WebRootPath, folderName, file.FileName)
+                };
+                await dbContext.Files.AddAsync(video);
+            }
 
-        //    await dbContext.Files.AddAsync(video);
-        //    await dbContext.SaveChangesAsync();
-        //    return Ok(video.FileId);
-        //}
+            await dbContext.SaveChangesAsync();
 
+            return Ok();
+        }
 
         [HttpPost("remark")]
         public async Task<IActionResult> Remark(RemarkRequest request)
@@ -97,6 +106,10 @@ namespace DigitaizerDart.WebApp.Controllers
             await dbContext.SaveChangesAsync();
             return Ok();
         }
+
+
+
+
 
         [HttpGet("names")]
         public IActionResult GetFileNames()
@@ -134,7 +147,6 @@ namespace DigitaizerDart.WebApp.Controllers
             return Json(Filtering(data));
         }
 
-
         [HttpGet("versions/{userId}/{fileId}")]
         public IActionResult GetVersions(Guid userId, Guid fileId)
         {
@@ -150,6 +162,8 @@ namespace DigitaizerDart.WebApp.Controllers
 
             return Ok(versions);
         }
+
+
 
 
         [HttpPut("edit")]
@@ -171,6 +185,47 @@ namespace DigitaizerDart.WebApp.Controllers
             }
             return Json(json);
         }
+
+        [HttpPost("addpoint")]
+        public IActionResult AddPoint([FromBody] AddRequest request)
+        {
+            string data;
+            JObject json;
+
+            using (var stream = new StreamReader(Path.Combine(env.WebRootPath, "test.json"), Encoding.UTF8))
+            {
+                data = stream.ReadToEnd();
+            }
+
+            json = AddDeletePoint(data, request);
+
+            using (var stream = new StreamWriter(System.IO.File.OpenWrite(Path.Combine(env.WebRootPath, "Add.json")), Encoding.UTF8))
+            {
+                stream.WriteLine(json);
+            }
+            return Json(json);
+        }
+
+        [HttpDelete("deletepoint")]
+        public IActionResult DeletePoint([FromBody] EditRequest request)
+        {
+            string data;
+            JObject json;
+
+            using (var stream = new StreamReader(Path.Combine(env.WebRootPath, "add.json"), Encoding.UTF8))
+            {
+                data = stream.ReadToEnd();
+            }
+
+            json = AddDeletePoint(data, request);
+
+            using (var stream = new StreamWriter(System.IO.File.OpenWrite(Path.Combine(env.WebRootPath, "Delete.json")), Encoding.UTF8))
+            {
+                stream.WriteLine(json);
+            }
+            return Json(json);
+        }
+
 
 
 
@@ -216,6 +271,55 @@ namespace DigitaizerDart.WebApp.Controllers
             obj[request.Frame]["people"][request.PeopleIndex]["pose_keypoints_2d"][request.PointsIndex] = request.X;
             obj[request.Frame]["people"][request.PeopleIndex]["pose_keypoints_2d"][request.PointsIndex + 1] = request.Y;
             return obj;
+        }
+
+        private JObject AddDeletePoint(string jsonString, object requestModel)
+        {
+            JObject obj = JObject.Parse(jsonString);
+            switch ("")
+            {
+                case "add":
+                    {
+                        AddRequest request = requestModel as AddRequest;
+
+                        JArray koord = new JArray();
+
+                        JObject kadr = (JObject)obj[$"{request.Frame}.jpg"];
+                        JArray people = (JArray)kadr["people"];
+
+                        JObject points = (JObject)people[request.PeopleIndex];
+                        koord = (JArray)points["pose_keypoints_2d"];
+
+                        koord.Add(request.X);
+                        koord.Add(request.Y);
+
+                        obj[$"{request.Frame}.jpg"]["people"][request.PeopleIndex]["pose_keypoints_2d"] = koord;
+                        return obj;
+                    }
+                case "delete":
+                    {
+                        EditRequest request = requestModel as EditRequest;
+
+                        JArray koord = new JArray();
+
+                        JObject kadr = (JObject)obj[$"{request.Frame}.jpg"];
+                        JArray people = (JArray)kadr["people"];
+
+                        JObject points = (JObject)people[request.PeopleIndex];
+                        koord = (JArray)points["pose_keypoints_2d"];
+
+                        koord.Remove(request.X);
+                        koord.Remove(request.Y);
+
+                        obj[$"{request.Frame}.jpg"]["people"][request.PeopleIndex]["pose_keypoints_2d"] = koord;
+                        return obj;
+                    }
+                default:
+                    {
+                        return default;
+                    }
+            }
+
         }
 
         private byte[] Serialize2Bytes(object data)

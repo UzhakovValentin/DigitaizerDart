@@ -1,8 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <NoWin32Manifest>true</NoWin32Manifest>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
 
@@ -16,6 +18,8 @@
 
 
   <ItemGroup>
+    <Folder Include="ModelViews\Responces\" />
+    <Folder Include="ModelViews\Requests\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
