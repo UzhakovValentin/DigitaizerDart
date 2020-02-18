@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DigitaizerDart.WebApp.Controllers
 {
-    [Route("api/User")]
+    [Route("user")]
     public class UserController : Controller
     {
         private readonly DataBaseContext dbContext;

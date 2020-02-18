@@ -18,16 +18,18 @@ using Microsoft.Extensions.FileProviders;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using Newtonsoft.Json.Linq;
+using System.Runtime.Serialization;
+using System.Net.Http;
 
 namespace DigitaizerDart.WebApp.Controllers
 {
-    [Route("api/File")]
-    public class FileController : Controller
+    [Route("video")]
+    public class VideoController : Controller
     {
         private readonly IHostingEnvironment env;
         private readonly DataBaseContext dbContext;
 
-        public FileController(IHostingEnvironment env,
+        public VideoController(IHostingEnvironment env,
             DataBaseContext dbContext)
         {
             this.env = env;
@@ -35,98 +37,107 @@ namespace DigitaizerDart.WebApp.Controllers
         }
 
 
-
-        [HttpPost("upload/{folderName}/{fileName}")]
-        public async Task<IActionResult> PostDataToJson(string folderName, string fileName)
-        {
-            if (!Directory.Exists(Path.Combine(env.WebRootPath, folderName)))
-            {
-                Directory.CreateDirectory(Path.Combine(env.WebRootPath, folderName));
-            }
-
-            using (var stream = new FileStream(Path.Combine(env.WebRootPath, $"{folderName}/{fileName}.json"), FileMode.CreateNew))
-            {
-                await Request.Body.CopyToAsync(stream);
-            }
-            return Ok();
-        }
-
-        [HttpPost("video/upload/{folderName}")]
-        public async Task<IActionResult> PostVideo(string folderName)
+        [HttpPost("upload/{folderName}")]
+        public async Task<IActionResult> UploadVideo(string folderName)
         {
             var files = Request.Form.Files;
+            var path = Path.Combine(env.WebRootPath, @$"videos\{folderName}");
+
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
 
             foreach (var file in files)
             {
-                using (var fileStream = new FileStream(Path.Combine(env.WebRootPath, folderName, file.FileName), FileMode.Create))
+                using (var fileStream = new FileStream(Path.Combine(path, file.FileName), FileMode.Create))
                 {
                     await file.CopyToAsync(fileStream);
                 }
 
-                File video = new File
-                {
-                    FileName = file.FileName,
-                    Path = Path.Combine(env.WebRootPath, folderName, file.FileName)
-                };
-                await dbContext.Files.AddAsync(video);
+                //File video = new File
+                //{
+                //    FileName = file.FileName,
+                //    Path = Path.Combine(path, file.FileName)
+                //};
+                //await dbContext.Files.AddAsync(video);
             }
 
-            await dbContext.SaveChangesAsync();
+            //await dbContext.SaveChangesAsync();
 
             return Ok();
         }
 
-        [HttpPost("remark")]
-        public async Task<IActionResult> Remark(RemarkRequest request)
+        [HttpPost("json/upload/{folderName}")]
+        public async Task<IActionResult> UploadJson(string folderName)
         {
-            var user = await dbContext.Users.FindAsync(request.UserId);
-            var file = await dbContext.Files.FindAsync(request.FileId);
+            var path = Path.Combine(env.WebRootPath, @$"videos\{folderName}");
+            var fileName = folderName;
 
-
-            var json = Bytes2Json<MarkJsonObject>(file.MarkArray);
-
-            var result = json.DeviceData.Find(x => x.CameraAt == request.CameraRacurs)
-                .Data.Find(x => x.Type == request.Bone)
-                .PointInfo.Find(x => x.Frame == request.Frame);
-
-            result.Position.X = request.X;
-            result.Position.Y = request.Y;
-            result.Position.Z = request.Z;
-
-            var bytes = Serialize2Bytes(result);
-
-            user.Versions.Add(new Version
+            if (Directory.Exists(path))
             {
-                UserId = request.UserId,
-                FileId = request.FileId,
-                MarkArray = bytes,
-                DateTime = DateTime.Now
-            });
-
-            await dbContext.SaveChangesAsync();
-            return Ok();
-        }
-
-
-
-
-
-        [HttpGet("names")]
-        public IActionResult GetFileNames()
-        {
-            List<string> paths = new List<string>();
-            var files = new DirectoryInfo(env.WebRootPath).GetFiles();
-
-            foreach (var file in files)
-            {
-                if (Path.GetExtension(file.FullName) != ".json")
+                using (var stream = new FileStream(Path.Combine(path, $"{fileName}.json"), FileMode.CreateNew))
                 {
-                    paths.Add(Path.GetFileName(file.FullName));
+                    await Request.Body.CopyToAsync(stream);
                 }
+                return Ok();
             }
 
-            return Json(paths);
+            return NotFound("Директория с таким именем не найдена");
+
+
+            //HttpClient http = new HttpClient();
+            //var responce = await http.GetAsync("http://localhost:5000/api/video/videos");
+            //return Json(await responce.Content.ReadAsAsync<string[]>());
         }
+
+        [HttpGet("download/{videoName}")]
+        public IActionResult DownloadVideo(string videoName)
+        {
+            string videoPath = Path.Combine(env.WebRootPath, @$"videos\{videoName}.avi");
+            if (System.IO.File.Exists(videoPath))
+            {
+                string videoType = "video/x-msvideo";
+                var result = PhysicalFile(videoPath, videoType, $"{videoName}.avi", true);
+                return result;
+            }
+            return NotFound("Видео с таким названием не найдено");
+        }
+
+        [HttpGet("{folderName}")]
+        public IActionResult GetFolderFilesPaths(string folderName)
+        {
+            var folderPath = Path.Combine(env.WebRootPath, @$"videos\{folderName}");
+            if (Directory.Exists(folderPath))
+            {
+                var files = Directory.GetFiles(folderPath);
+                return Json(files);
+            }
+            return NotFound("Директория с таким именем не найдена");
+        }
+
+        [HttpPost("alphapose/{folderName}")]
+        public async Task<IActionResult> UploadAlphaPoseJson(string folderName)
+        {
+            var path = Path.Combine(env.WebRootPath, @$"videos\{folderName}\alphapose");
+            var fileName = folderName;
+
+            if (Directory.Exists(path))
+            {
+                using (var stream = new FileStream(Path.Combine(path, $"{fileName}.json"), FileMode.CreateNew))
+                {
+                    await Request.Body.CopyToAsync(stream);
+                }
+                return Ok();
+            }
+
+            return NotFound("Директория с таким именем не найдена");
+        }
+
+
+
+
+
 
         [HttpGet("meta/{fileName}")]
         public IActionResult GetFileMetaData(string fileName)
@@ -226,6 +237,36 @@ namespace DigitaizerDart.WebApp.Controllers
             return Json(json);
         }
 
+        [HttpPost("remark")]
+        public async Task<IActionResult> Remark(RemarkRequest request)
+        {
+            var user = await dbContext.Users.FindAsync(request.UserId);
+            var file = await dbContext.Files.FindAsync(request.FileId);
+
+
+            var json = Bytes2Json<MarkJsonObject>(file.MarkArray);
+
+            var result = json.DeviceData.Find(x => x.CameraAt == request.CameraRacurs)
+                .Data.Find(x => x.Type == request.Bone)
+                .PointInfo.Find(x => x.Frame == request.Frame);
+
+            result.Position.X = request.X;
+            result.Position.Y = request.Y;
+            result.Position.Z = request.Z;
+
+            var bytes = Serialize2Bytes(result);
+
+            user.Versions.Add(new Version
+            {
+                UserId = request.UserId,
+                FileId = request.FileId,
+                MarkArray = bytes,
+                DateTime = DateTime.Now
+            });
+
+            await dbContext.SaveChangesAsync();
+            return Ok();
+        }
 
 
 

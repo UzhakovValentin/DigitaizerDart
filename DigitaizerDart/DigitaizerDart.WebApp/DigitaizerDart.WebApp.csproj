@@ -20,7 +20,7 @@
   <ItemGroup>
     <Folder Include="ModelViews\Responces\" />
     <Folder Include="ModelViews\Requests\" />
-    <Folder Include="wwwroot\" />
+    <Folder Include="wwwroot\videos\test\alphapose\" />
   </ItemGroup>
 
 </Project>
