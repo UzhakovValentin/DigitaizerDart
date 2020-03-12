@@ -31,6 +31,7 @@ namespace DigitaizerDart.WebApp
             mig => mig.MigrationsAssembly("DigitaizerDart.WebApp")));
 
             services.AddSingleton<IIdFactory, IdFactory>();
+            services.AddSingleton<FileProviderClass>();
             services.AddMvc();
         }
 
@@ -41,14 +42,10 @@ namespace DigitaizerDart.WebApp
             {
                 app.UseDeveloperExceptionPage();
             }
-
-
             app.UseStaticFiles(new StaticFileOptions()
             {
                 ServeUnknownFileTypes = true
             });
-
-
             app.UseMvc();
         }
     }

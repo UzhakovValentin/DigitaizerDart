@@ -22,11 +22,9 @@ namespace DigitaizerDart.WebApp.Controllers
             this.idFactory = idFactory;
         }
 
-        [HttpPost("registr")]
+        [HttpPost("registration")]
         public async Task<IActionResult> AddUser([FromBody] RegistrationForm form)
         {
-            
-
             User user = new User()
             {
                 Name = form.Name,
@@ -39,11 +37,9 @@ namespace DigitaizerDart.WebApp.Controllers
             return Json(user.LoginId);
         }
 
-        [HttpPost("auth")]
+        [HttpPost("authorize")]
         public IActionResult Auth([FromBody] AuthForm form)
         {
-
-            
             var user = dbContext.Users.FirstOrDefault(x => x.LoginId == form.Login);
 
             if (user != null)
