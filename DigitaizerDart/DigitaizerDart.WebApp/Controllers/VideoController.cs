@@ -77,6 +77,19 @@ namespace DigitaizerDart.WebApp.Controllers
             return Ok();
         }
 
+        [HttpGet("download/{videoName}")]
+        public IActionResult DownloadVideo(string videoName)
+        {
+            string videoPath = Path.Combine(env.WebRootPath, $"videos/{videoName}.avi");
+            if (System.IO.File.Exists(videoPath))
+            {
+                string videoType = "video/x-msvideo";
+                var result = PhysicalFile(videoPath, videoType, $"{videoName}.avi", true);
+                return result;
+            }
+            return NotFound("Видео с таким названием не найдено");
+        }
+
         /// <summary>
         /// Загрузка на сервер json-файлов с трёхмерными координатами
         /// </summary>
@@ -85,7 +98,7 @@ namespace DigitaizerDart.WebApp.Controllers
         [HttpPost("json/upload/{folderName}")]
         public async Task<IActionResult> UploadJson(string folderName)
         {
-            var path = Path.Combine(env.WebRootPath, @$"videos\{folderName}");
+            var path = Path.Combine(env.WebRootPath, $"videos/{folderName}");
             var fileName = folderName;
 
             if (Directory.Exists(path))
@@ -113,11 +126,16 @@ namespace DigitaizerDart.WebApp.Controllers
         [HttpGet("{folderName}")]
         public IActionResult GetFolderFilesPaths(string folderName)
         {
-            var folderPath = Path.Combine(env.WebRootPath, @$"videos\{folderName}");
+            var folderPath = Path.Combine(env.WebRootPath, $"videos/{folderName}");
             if (Directory.Exists(folderPath))
             {
                 var files = Directory.GetFiles(folderPath);
-                return Json(files);
+                List<string> relativePaths = new List<string>();
+                foreach (var file in files)
+                {
+                    relativePaths.Add(Path.GetRelativePath(env.WebRootPath, file));
+                }
+                return Json(relativePaths);
             }
             return NotFound("Директория с таким именем не найдена");
         }
@@ -403,19 +421,6 @@ namespace DigitaizerDart.WebApp.Controllers
 
         //    await dbContext.SaveChangesAsync();
         //    return Ok();
-        //}
-
-        //[HttpGet("download/{videoName}")]
-        //public IActionResult DownloadVideo(string videoName)
-        //{
-        //    string videoPath = Path.Combine(env.WebRootPath, @$"videos\{videoName}.avi");
-        //    if (System.IO.File.Exists(videoPath))
-        //    {
-        //        string videoType = "video/x-msvideo";
-        //        var result = PhysicalFile(videoPath, videoType, $"{videoName}.avi", true);
-        //        return result;
-        //    }
-        //    return NotFound("Видео с таким названием не найдено");
         //}
 
         private JObject Filtering(string jsonString)
