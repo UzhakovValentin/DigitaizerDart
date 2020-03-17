@@ -21,6 +21,7 @@ namespace DigitaizerDart.WebApp
             WebHost.CreateDefaultBuilder(args)
                 .UseUrls("http://*:5000")
                 .ConfigureAppConfiguration(config => config.AddJsonFile("appsettings.Secret.json", false))
-                .UseStartup<Startup>();
+                .UseStartup<Startup>()
+                .UseKestrel(options => options.Limits.MaxRequestBodySize = null);
     }
 }

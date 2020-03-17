@@ -41,6 +41,12 @@ namespace DigitaizerDart.WebApp.Controllers
             this.file = file;
         }
 
+        [HttpGet("check/watch")]
+        public IActionResult Get()
+        {
+            return Json("UPDATED BY WATCHTOWER");
+        }
+
         /// <summary>
         /// Загрузка отснятых и не размеченных видео на сервер
         /// </summary>
@@ -187,6 +193,11 @@ namespace DigitaizerDart.WebApp.Controllers
             var path = Path.Combine(env.WebRootPath, $"videos/{folderName}/alphapose");
             var fileName = folderName;
 
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
             if (Directory.Exists(path))
             {
                 using (var stream = new FileStream(Path.Combine(path, $"{fileName}.json"), FileMode.CreateNew))
@@ -211,7 +222,12 @@ namespace DigitaizerDart.WebApp.Controllers
             if (Directory.Exists(folderPath))
             {
                 var files = Directory.GetFiles(folderPath);
-                return Json(files);
+                List<string> relativePaths = new List<string>();
+                foreach (var file in files)
+                {
+                    relativePaths.Add(Path.GetRelativePath(env.WebRootPath, file));
+                }
+                return Json(relativePaths);
             }
             return NotFound("Директория с таким именем не найдена");
         }
